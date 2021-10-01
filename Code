@@ -1,0 +1,40 @@
+%% Initialize
+clc;  % Remove command Window
+close all;  % Close one or more figures
+clear all;  % Remove items from workspace, freeing up system memory
+
+%% Step.1 Dicom Data Preprocessing(다이콤 파일 전처리하기)
+
+%% Read Dicom file
+data = dicomread('scout.dcm'); % 변수명 = dicomread(경로) : read Dicom image
+info = dicominfo('scout.dcm'); % 변수명 = dicominfo(경로) : read Dicom infomation
+
+%% Change Data type to double
+data_double = double(data);
+
+%% HU scale로 변경
+data_HU = data_double * info.RescaleSlope + info.RescaleIntercept;
+
+%% min-max Normalization
+max_value = max(data_double(:));
+min_value = min(data_double(:));
+data_norm = (data_double-min_value) / (max_value - min_value);
+
+%% Analysis _ Histogram
+%Read grayscale image to workplace
+%If the image has data type single or double, then values must be in the range [0, 1]. 
+%If I has values outside the range [0, 1], 
+%then you can use the rescale function to rescale values to the expected range.
+figure;
+subplot(1,2,1); imagesc(data_norm); colormap gray; axis off square; title 'Scout'
+subplot(1,2,2); imhist(data_norm); xlabel 'index'; ylabel 'frequency'; title 'Histogram'
+
+%% Intensity Transformation; function_histeq
+%'histeq' function is to enhance contrast using histogram equalization
+data_his = histeq(data_norm);
+
+figure;
+subplot(2,2,1); imagesc(data_norm); colormap gray; axis off square; title 'Original Scout'
+subplot(2,2,2); imhist(data_norm); xlim ([0 1]); ylim ([0 10000]); title 'Original Histogram'
+subplot(2,2,3); imagesc(data_his); colormap gray; axis off square; title 'Histeq Scout'
+subplot(2,2,4); imhist(data_his); xlim ([0 1]); ylim ([0 10000]); title 'Histeq Histogram'
